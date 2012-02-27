@@ -1,3 +1,10 @@
+openssl (1.0.0e-2ubuntu2~bpohebex1) lucid; urgency=low
+
+  * Backport to Lucid: drop multi-arch support.
+
+ -- Vincent Bernat <bernat@debian.org>  Fri, 30 Sep 2011 16:24:40 +0200
+
+
 openssl (1.0.0e-2ubuntu4) oneiric; urgency=low
 
   * The previous change moved the notification to major upgrades only, but

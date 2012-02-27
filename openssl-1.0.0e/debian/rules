@@ -19,8 +19,6 @@ export VERSION=$(shell dpkg-parsechangelog | grep '^Version:' | sed -e 's/^.*://
 DEB_HOST_ARCH = $(shell dpkg-architecture -qDEB_HOST_ARCH)
 DEB_HOST_ARCH_OS = $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
 
-DEB_HOST_MULTIARCH=$(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
-
 DEB_HOST_GNU_TYPE=$(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE=$(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 ifneq ($(DEB_HOST_GNU_TYPE),$(DEB_BUILD_GNU_TYPE))
@@ -31,7 +29,7 @@ CROSS=CC=$(CC)
 MAKE_TEST=make test
 endif
 
-CONFARGS  = --prefix=/usr --openssldir=/usr/lib/ssl --libdir=lib/$(DEB_HOST_MULTIARCH) no-idea no-mdc2 no-rc5 zlib  enable-tlsext no-ssl2
+CONFARGS  = --prefix=/usr --openssldir=/usr/lib/ssl no-idea no-mdc2 no-rc5 zlib  enable-tlsext no-ssl2
 OPT_alpha = ev4 ev5
 ARCHOPTS  = OPT_$(DEB_HOST_ARCH)
 OPTS      = $($(ARCHOPTS))
@@ -124,23 +122,23 @@ binary-arch:	build install
 	# pic static libraries, nobody should need them
 #	mv debian/tmp/usr/lib/libcrypto.a debian/tmp/usr/lib/libcrypto_pic.a
 #	mv debian/tmp/usr/lib/libssl.a debian/tmp/usr/lib/libssl_pic.a
-	cp -pf libcrypto.static debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/libcrypto.a
-	cp -pf libssl.static debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/libssl.a
+	cp -pf libcrypto.static debian/tmp/usr/lib/libcrypto.a
+	cp -pf libssl.static debian/tmp/usr/lib/libssl.a
 	# move runtime libraries to /lib
-	install -d debian/tmp/lib/$(DEB_HOST_MULTIARCH)
-	mv debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/lib*.so.* debian/tmp/lib/$(DEB_HOST_MULTIARCH)
-	ln -sf /lib/$(DEB_HOST_MULTIARCH)/$$(readlink debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/libcrypto.so) debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/libcrypto.so
-	ln -sf /lib/$(DEB_HOST_MULTIARCH)/$$(readlink debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/libssl.so) debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/libssl.so
+	install -d debian/tmp/lib
+	mv debian/tmp/usr/lib/lib*.so.* debian/tmp/lib
+	ln -sf /lib/$$(readlink debian/tmp/usr/lib/libcrypto.so) debian/tmp/usr/lib/libcrypto.so
+	ln -sf /lib/$$(readlink debian/tmp/usr/lib/libssl.so) debian/tmp/usr/lib/libssl.so
 ifneq ($(DEB_HOST_ARCH_OS),hurd)
 	# leave symlinks behind due to rpath in old versions
-	for x in debian/tmp/lib/$(DEB_HOST_MULTIARCH)/lib*.so.*; do ln -s /lib/$(DEB_HOST_MULTIARCH)/$$(basename $$x) debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/$$(basename $$x); done
+	for x in debian/tmp/lib/lib*.so.*; do ln -s /lib/$$(basename $$x) debian/tmp/usr/lib/$$(basename $$x); done
 endif
 	mkdir -p debian/tmp/etc/ssl
 	mv debian/tmp/usr/lib/ssl/{certs,openssl.cnf,private} debian/tmp/etc/ssl/
 	ln -s /etc/ssl/{certs,openssl.cnf,private} debian/tmp/usr/lib/ssl/
-	cp -pf debian/tmp/lib/$(DEB_HOST_MULTIARCH)/libcrypto.so.* debian/libcrypto1.0.0-udeb/lib/
-	cp -pf debian/tmp/lib/$(DEB_HOST_MULTIARCH)/libssl.so.* debian/libssl1.0.0-udeb/lib/
-	for opt in $(OPTS); do set -xe; mkdir -p debian/tmp/lib/$(DEB_HOST_MULTIARCH)/$$opt; cp -auv $$opt/lib*.so* debian/tmp/lib/$(DEB_HOST_MULTIARCH)/$$opt/; done
+	cp -pf debian/tmp/lib/libcrypto.so.* debian/libcrypto1.0.0-udeb/lib/
+	cp -pf debian/tmp/lib/libssl.so.* debian/libssl1.0.0-udeb/lib/
+	for opt in $(OPTS); do set -xe; mkdir -p debian/tmp/lib/$$opt; cp -auv $$opt/lib*.so* debian/tmp/lib/$$opt/; done
 	install debian/copyright debian/libssl1.0.0/usr/share/doc/libssl1.0.0/
 	install debian/changelog debian/libssl1.0.0/usr/share/doc/libssl1.0.0/changelog.Debian
 	install debian/copyright debian/libssl-dev/usr/share/doc/libssl-dev/
@@ -166,7 +164,7 @@ endif
 	dpkg-gensymbols -Pdebian/libssl1.0.0/ -plibssl1.0.0 -c4
 	dh_makeshlibs -a -V "libssl1.0.0 (>= 1.0.0)" --add-udeb="libcrypto1.0.0-udeb"
 	sed -i '/^udeb: libssl/s/libcrypto1.0.0-udeb/libssl1.0.0-udeb/' debian/libssl1.0.0/DEBIAN/shlibs
-	dh_shlibdeps -a -L libssl1.0.0 -l debian/libssl1.0.0/lib/$(DEB_HOST_MULTIARCH)
+	dh_shlibdeps -a -L libssl1.0.0 -l debian/libssl1.0.0/lib
 	dh_gencontrol -a
 	dh_installdeb -a
 	dh_md5sums -a
