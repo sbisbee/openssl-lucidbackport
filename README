@@ -1,0 +1,12 @@
+Consolidating information on how to build a backport package of OpenSSL 1.0.0e
+for Lucid. All of the original work was done by Vincent Bernat
+<bernat@debian.org>.
+
+Build Steps
+-----------
+
+1. `cd openssl-1.0.0e`
+
+2. `dpkg-buildpackage -us -uc`
+
+3. .deb files are in the project root, so just install and go crazy.
